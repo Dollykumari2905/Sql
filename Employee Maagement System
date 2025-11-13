@@ -1,0 +1,140 @@
+
+CREATE DATABASE Employee_Management;
+USE Employee_Management;
+
+
+CREATE TABLE Department (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL,
+    manager_id INT
+);
+
+
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    gender CHAR(1),
+    dob DATE,
+    phone VARCHAR(15),
+    email VARCHAR(100) UNIQUE,
+    hire_date DATE,
+    dept_id INT,
+    designation VARCHAR(50),
+    FOREIGN KEY (dept_id) REFERENCES Department(dept_id)
+);
+
+
+CREATE TABLE Attendance (
+    att_id INT PRIMARY KEY,
+    emp_id INT,
+    att_date DATE,
+    status VARCHAR(10) CHECK (status IN ('Present', 'Absent', 'Leave')),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
+);
+
+
+CREATE TABLE Salary (
+    salary_id INT PRIMARY KEY,
+    emp_id INT,
+    basic_salary DECIMAL(10,2),
+    hra DECIMAL(10,2),
+    da DECIMAL(10,2),
+    deductions DECIMAL(10,2),
+    net_salary DECIMAL(10,2),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
+);
+
+
+CREATE TABLE Project (
+    project_id INT PRIMARY KEY,
+    project_name VARCHAR(50),
+    emp_id INT,
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
+);
+
+INSERT INTO Department VALUES
+(1, 'IT', NULL),
+(2, 'HR', NULL),
+(3, 'Finance', NULL);
+
+
+INSERT INTO Employee VALUES
+(101, 'Dolly', 'Kumari', 'F', '2004-08-01', '6203889875', 'dolly7957kumari@gmail.com', '2025-06-01', 1, 'Software Intern'),
+(102, 'Amit', 'Sharma', 'M', '1999-03-15', '9876543210', 'amit.sharma@gmail.com', '2023-01-10', 1, 'Developer'),
+(103, 'Priya', 'Verma', 'F', '2000-11-22', '9123456789', 'priya.verma@gmail.com', '2024-02-20', 2, 'HR Executive'),
+(104, 'Rohan', 'Das', 'M', '1998-09-05', '9988776655', 'rohan.das@gmail.com', '2022-12-01', 3, 'Accountant');
+
+
+UPDATE Department SET manager_id = 102 WHERE dept_id = 1;
+UPDATE Department SET manager_id = 103 WHERE dept_id = 2;
+UPDATE Department SET manager_id = 104 WHERE dept_id = 3;
+
+
+INSERT INTO Attendance VALUES
+(1, 101, '2025-11-01', 'Present'),
+(2, 101, '2025-11-02', 'Absent'),
+(3, 102, '2025-11-01', 'Present'),
+(4, 103, '2025-11-01', 'Leave'),
+(5, 104, '2025-11-01', 'Present');
+
+
+INSERT INTO Salary VALUES
+(1, 101, 20000, 3000, 1500, 1000, NULL),
+(2, 102, 50000, 7000, 5000, 2000, NULL),
+(3, 103, 40000, 6000, 4000, 1500, NULL),
+(4, 104, 35000, 5000, 3000, 1000, NULL);
+
+
+UPDATE Salary
+SET net_salary = basic_salary + hra + da - deductions;
+
+
+INSERT INTO Project VALUES
+(1, 'Payroll System', 102),
+(2, 'Recruitment Portal', 103),
+(3, 'Financial Dashboard', 104),
+(4, 'EMS App', 101);
+
+
+
+
+SELECT e.emp_id, e.first_name, e.last_name, d.dept_name, e.designation
+FROM Employee e
+JOIN Department d ON e.dept_id = d.dept_id;
+
+
+SELECT d.dept_name, e.first_name AS manager_name
+FROM Department d
+JOIN Employee e ON d.manager_id = e.emp_id;
+
+
+SELECT emp_id,
+       SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END) AS total_present,
+       SUM(CASE WHEN status = 'Absent' THEN 1 ELSE 0 END) AS total_absent,
+       SUM(CASE WHEN status = 'Leave' THEN 1 ELSE 0 END) AS total_leave
+FROM Attendance
+GROUP BY emp_id;
+
+
+SELECT e.first_name, e.last_name, d.dept_name, s.net_salary
+FROM Employee e
+JOIN Department d ON e.dept_id = d.dept_id
+JOIN Salary s ON e.emp_id = s.emp_id;
+
+
+SELECT d.dept_name, ROUND(AVG(s.net_salary),2) AS avg_salary
+FROM Department d
+JOIN Employee e ON d.dept_id = e.dept_id
+JOIN Salary s ON e.emp_id = s.emp_id
+GROUP BY d.dept_name;
+
+
+SELECT e.first_name, e.last_name, p.project_name
+FROM Employee e
+JOIN Project p ON e.emp_id = p.emp_id;
+
+
+SELECT first_name, last_name, hire_date
+FROM Employee
+WHERE hire_date > '2024-12-31';
